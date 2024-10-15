@@ -3,6 +3,7 @@ package controllers
 import (
 	"backend/models"
 	"backend/services"
+	"backend/utils"
 	"log"
 	"net/http"
 
@@ -14,26 +15,18 @@ func GetUsers(c echo.Context) error { // For all users
 
 	if err != nil {
 		log.Print(err)
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"code": "500",
-			"message": "Internal server error",
-			"status": "error",
-		})
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Internal server error", nil)
 	}
 	return c.JSON(http.StatusOK, users)
 }
 
-func GetUser(c echo.Context) error { // Just one user
+func GetSpecUser(c echo.Context) error { // Just one user
 	id := c.Param("id")
-	user, err := services.GetUser(id)
+	user, err := services.GetSpecUser(id)
 
 	if err != nil {
 		log.Print(err)
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"code": "500",
-			"message": "Internal server error",
-			"status": "error",
-		})
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Internal server error", nil)
 	}
 	return c.JSON(http.StatusOK, user)
 }
@@ -41,49 +34,37 @@ func GetUser(c echo.Context) error { // Just one user
 func CreateUser(c echo.Context) error {
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return utils.BadRequestResponse(c, "Invalid request data", nil)
 	}
 
 	if err := services.CreateUser(*user); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create user", err)
 	}
 
-	return c.JSON(http.StatusCreated, map[string]interface{}{
-		"code": "201",
-		"message": "User created successfully",
-		"status": "success",
-	})
+	return utils.SuccessResponse(c, "User created successfully", nil)
 }
 
 func UpdateUser(c echo.Context) error {
 	id := c.Param("id")
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return utils.BadRequestResponse(c, "Invalid request data", nil)
 	}
 
 	err := services.UpdateUser(id, *user)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update user", err)
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"code": "200",
-		"message": "User updated successfully",
-		"status": "success",
-	})
+	return utils.SuccessResponse(c, "User updated successfully", nil)
 }
 
 func DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	err := services.DeleteUser(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete user", err)
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"code": "200",
-		"message": "User deleted successfully",
-		"status": "success",
-	})
+	return utils.SuccessResponse(c, "User deleted successfully", nil)
 }

@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"backend/models"
 	"backend/utils"
 	"net/http"
 
@@ -13,20 +12,16 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
         token := c.Request().Header.Get("Authorization")
         _, exists := utils.InvalidTokens[token]
 		if exists {
-			return c.JSON(http.StatusUnauthorized, &models.Response{
-				Code:    401,
-				Message: "Token tidak valid atau Anda telah logout",
-				Status:  false,
-			})
+			return utils.ErrorResponse(c, http.StatusUnauthorized, "Token tidak valid atau Anda telah logout", nil)
 		}
 
         if token == "" {
-            return echo.NewHTTPError(http.StatusUnauthorized, "Missing or invalid token")
+            return utils.ErrorResponse(c, http.StatusUnauthorized, "Missing or invalid token", nil)
         }
 
         claims, err := utils.ValidateToken(token)
         if err != nil {
-            return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
+            return utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid token", nil)
         }
 
         c.Set("userId", claims["userId"])
@@ -40,24 +35,20 @@ func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
         _, exists := utils.InvalidTokens[token]
 		if exists {
-			return c.JSON(http.StatusUnauthorized, &models.Response{
-				Code:    401,
-				Message: "Token tidak valid atau Anda telah logout",
-				Status:  false,
-			})
+			return utils.ErrorResponse(c, http.StatusUnauthorized, "Token tidak valid atau Anda telah logout", nil)
 		}
 
         if token == "" {
-            return echo.NewHTTPError(http.StatusUnauthorized, "Missing or invalid token")
+            return utils.ErrorResponse(c, http.StatusUnauthorized, "Missing or invalid token", nil)
         }
 
         claims, err := utils.ValidateToken(token)
         if err != nil {
-            return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
+            return utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid token", nil)
         }
 
         if claims["role"] != "admin" {
-            return echo.NewHTTPError(http.StatusForbidden, "Unauthorized")
+            return utils.ErrorResponse(c, http.StatusForbidden, "You don't have permission to access this resource", nil)
         }
 
         c.Set("userId", claims["userId"])

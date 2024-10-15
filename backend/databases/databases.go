@@ -1,11 +1,13 @@
 package database
 
 import (
+	"backend/services"
 	"context"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/spf13/viper"
 )
@@ -32,4 +34,12 @@ func Connect() {
 	}
 
 	DB = client.Database(viper.GetString("MONGO_DB"))
+}
+
+func InitCollection() {
+	services.InitUserService(DB)
+	services.InitMovieService(DB)
+	services.InitShowtimeService(DB)
+	services.InitBookingService(DB)
+	services.InitTheaterService(DB)
 }

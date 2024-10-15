@@ -25,10 +25,11 @@ func init() {
 	}
 
 	jwtSecret = []byte(viper.GetString("JWT_SECRET"))
-    encryptionKey = make([]byte, 32)
-    if _, err := rand.Read(encryptionKey); err != nil {
-        panic(err)
-    }
+    // encryptionKey = make([]byte, 32)
+    // if _, err := rand.Read(encryptionKey); err != nil {
+    //     panic(err)
+    // }
+	encryptionKey = []byte("12345678901234561234567890123456")
 }
 
 func GenerateToken(userId, name, role string) (string, error) {
@@ -50,6 +51,22 @@ func GenerateToken(userId, name, role string) (string, error) {
 	}
 
 	return encryptedToken, nil
+}
+
+func GetUserIDFromToken(encryptedToken string) (string, error) {
+	decryptedToken, err := decryptToken(encryptedToken)
+	if err != nil {
+		return "", err
+	}
+
+	token, err := jwt.Parse(decryptedToken, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims["userId"].(string), nil
+	}
+	return "", err
 }
 
 func ValidateToken(encryptedToken string) (jwt.MapClaims, error) {

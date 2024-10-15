@@ -16,51 +16,46 @@ type LoginRequest struct {
 func RegisterUser(c echo.Context) error {
     user := new(models.User)
     if err := c.Bind(user); err != nil {
-        return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+        return utils.BadRequestResponse(c, "Invalid request data", nil)
     }
 
     if err := services.Register(*user); err != nil {
-        return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-    }   
+        return utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create user", err)
+    }
 
-    return c.JSON(http.StatusCreated, map[string]interface{}{
-        "code": "201",
-        "message": "User registered successfully",
-        "status": "success",
-    })
+    return utils.SuccessResponse(c, "User created successfully", nil)
 }
 
 func Login(c echo.Context) error {
     loginReq := new(LoginRequest)
     if err := c.Bind(loginReq); err != nil {
-        return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+        return utils.BadRequestResponse(c, "Invalid request data", nil)
     }
 
     user, err := services.Login(loginReq.Email, loginReq.Password)
     if err != nil {
-        return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+        return utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid email or password", nil)
     }
 
     token, err := utils.GenerateToken(user.ID.Hex(), user.Name, string(user.Role))
     if err != nil {
-        return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        return utils.InternalServerErrorResponse(c, "Failed to generate token", nil)
     }
 
-    return c.JSON(http.StatusOK, map[string]string{
-        "code": "200",
-        "message": "User logged in successfully",
-        "status": "success",
+    responseData := map[string]interface{}{
         "token": token,
-    })
+        "user": map[string]interface{}{
+            "name":  user.Name,
+            "role":  user.Role,
+        },
+    }
+
+    return utils.SuccessResponse(c, "User logged in successfully", responseData)
 }
 
 func Logout(c echo.Context) error {
     token := c.Request().Header.Get("Authorization")
     utils.InvalidateToken(token)
 
-    return c.JSON(http.StatusOK, map[string]interface{}{
-        "code": "200",
-        "message": "User logged out successfully",
-        "status": "success",
-    })
+    return utils.SuccessResponse(c, "User logged out successfully", nil)
 }

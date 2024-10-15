@@ -3,7 +3,6 @@ package main
 import (
 	database "backend/databases"
 	"backend/routes"
-	"backend/services"
 	"backend/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -14,7 +13,7 @@ func main() {
 	// Main setup
 	e := routes.Route()
 	database.Connect()
-	services.InitUserService(database.DB)
+	database.InitCollection()
 
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
