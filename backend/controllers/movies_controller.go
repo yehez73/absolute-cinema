@@ -4,6 +4,7 @@ import (
 	"backend/models"
 	"backend/services"
 	"backend/utils"
+	"io"
 	"net/http"
 
 	"github.com/go-playground/validator"
@@ -31,7 +32,15 @@ func CreateMovie(c echo.Context) error {
 	if err := c.Bind(movie); err != nil {
 		return utils.BadRequestResponse(c, "Invalid request data", nil)
 	}
-	
+
+	movie.Title = c.FormValue("title")
+	movie.Description = c.FormValue("description")
+	movie.Genre = c.FormValue("genre")
+	movie.Language = c.FormValue("language")
+	movie.ReleaseDate = c.FormValue("release_date")
+	movie.Rating = c.FormValue("rating")
+	movie.Duration = c.FormValue("duration")
+
 	validate := validator.New()
 	if err := validate.Struct(movie); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
@@ -39,7 +48,22 @@ func CreateMovie(c echo.Context) error {
 		}
 	}
 
-	err := services.CreateMovie(movie)
+	file, err := c.FormFile("image")
+	if err != nil {
+		return utils.BadRequestResponse(c, "Image is required", nil)
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Internal server error", nil)
+	}
+
+	fileBytes, err := io.ReadAll(src)
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to process image", nil)
+	}
+
+	err = services.CreateMovie(movie, fileBytes)
 	if err != nil {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "Internal server error", nil)
 	}
