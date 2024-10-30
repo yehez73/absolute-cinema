@@ -46,6 +46,46 @@ func GetMovies() ([]models.Movie, error) {
 	return movies, nil
 }
 
+func GetNowShowing() ([]models.Movie, error) {
+	var movies []models.Movie
+
+	cursor, err := movieCollection.Find(context.Background(), bson.M{"release_date": bson.M{"$lte": time.Now().Format("2006-01-02")}})
+
+	if err != nil {
+		return movies, err
+	}
+
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var movie models.Movie
+		cursor.Decode(&movie)
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+}
+
+func GetUpcoming() ([]models.Movie, error) {
+	var movies []models.Movie
+
+	cursor, err := movieCollection.Find(context.Background(), bson.M{"release_date": bson.M{"$gt": time.Now().Format("2006-01-02")}})
+
+	if err != nil {
+		return movies, err
+	}
+
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var movie models.Movie
+		cursor.Decode(&movie)
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+}
+
 func GetSpecMovie(id string) (models.Movie, error) {
 	var movie models.Movie
 	objectID, err := primitive.ObjectIDFromHex(id)

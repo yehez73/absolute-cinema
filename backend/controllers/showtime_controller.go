@@ -26,6 +26,16 @@ func GetSpecShowtime(c echo.Context) error {
 	return c.JSON(http.StatusOK, showtime)
 }
 
+func GetSpecShowtimeByMovieDate(c echo.Context) error {
+	movie_id := c.Param("movie_id")
+	showdate := c.Param("showdate")
+	showtime, err := services.GetSpecShowtimeByMovieDate(movie_id, showdate)
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusNoContent, "No showtimes found for the given movie and date", nil)
+	}
+	return c.JSON(http.StatusOK, showtime)
+}
+
 func CreateShowtime(c echo.Context) error {
 	showtime := new(models.Showtime)
 	if err := c.Bind(showtime); err != nil {

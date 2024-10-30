@@ -47,6 +47,16 @@ func GetSpecShowtime(id string) (models.Showtime, error) {
 	return showtime, err
 }
 
+func GetSpecShowtimeByMovieDate(movieID string, showdate string) (models.Showtime, error) {
+	var showtime models.Showtime
+	objectID, err := primitive.ObjectIDFromHex(movieID)
+	if err != nil {
+		return showtime, err
+	}
+	err = ShowtimeCollection.FindOne(context.Background(), bson.M{"movie_id": objectID, "show_date": showdate}).Decode(&showtime)
+	return showtime, err
+}
+
 func CreateShowtime(showtime *models.Showtime) error {
 	movieCollection := ShowtimeCollection.Database().Collection("movies")
 	var movie models.Movie

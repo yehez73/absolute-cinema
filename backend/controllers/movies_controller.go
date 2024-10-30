@@ -27,6 +27,22 @@ func GetSpecMovie(c echo.Context) error {
 	return c.JSON(http.StatusOK, movie)
 }
 
+func GetNowShowing(c echo.Context) error {
+	movies, err := services.GetNowShowing()
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Internal server error", nil)
+	}
+	return c.JSON(http.StatusOK, movies)
+}
+
+func GetUpcoming(c echo.Context) error {
+	movies, err := services.GetUpcoming()
+	if err != nil {
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "Internal server error", nil)
+	}
+	return c.JSON(http.StatusOK, movies)
+}
+
 func CreateMovie(c echo.Context) error {
 	movie := new(models.Movie)
 	if err := c.Bind(movie); err != nil {

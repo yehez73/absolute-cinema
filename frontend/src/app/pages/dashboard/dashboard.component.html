@@ -1,64 +1,75 @@
 <body class="bg-gray-100">
-    <!-- Navbar -->
-    <header class="text-white bg-black">
-        <div class="container mx-auto flex justify-between items-center p-4">
-            <h1 class="text-3xl font-mate-sc">ABSOLUTE CINEMA</h1>
-            <nav class="space-x-6 font-popins">
-                <a href="#" class="hover:text-yellow-500">Home</a>
-                <a href="#" class="hover:text-yellow-500">Movies</a>
-                <a href="#" class="hover:text-yellow-500">Contact Us</a>
-                <a href="#" class="hover:text-yellow-500">Login</a>
-            </nav>
-        </div>
-    </header>
-
     <!-- Hero Section -->
-    <section class="bg-cover bg-center h-screen text-white" style="background-image: url('https://img.freepik.com/free-photo/rows-red-seats-theater_53876-64710.jpg?t=st=1729048809~exp=1729052409~hmac=2c3350ad450b67a927916a5a09fd5a7fc141c10be8f1f0d2b61a15090716aa64&w=1380');">
+    <section class="bg-cover bg-center h-screen text-white"
+        style="background-image: url('https://img.freepik.com/free-photo/rows-red-seats-theater_53876-64710.jpg');">
         <div class="container mx-auto h-full flex flex-col justify-center items-start p-8 font-popins">
             <h2 class="text-5xl font-bold mb-4">Book Your Favorite Movie Tickets Now</h2>
             <p class="text-xl mb-6">Choose from a wide selection of movies and theaters near you.</p>
-            <a href="#movies" class="bg-yellow-500 text-black px-6 py-3 rounded-lg text-lg hover:bg-yellow-600">Browse Movies</a>
+            <a href="#movies" class="bg-yellow-500 text-black px-6 py-3 rounded-lg text-lg hover:bg-yellow-600">Browse
+                Movies</a>
         </div>
     </section>
-
     <!-- Movie Section -->
     <section id="movies" class="py-12 bg-white font-popins">
         <div class="container mx-auto text-center">
-          <h2 class="text-4xl font-bold mb-8">Now Showing</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            <div *ngFor="let movie of movies" class="text-black rounded-lg overflow-hidden shadow-lg">
-                <div class="w-full h-72 bg-white relative">
-                    <img [src]="movie.image" alt="{{ movie.title }}" class="w-full h-full object-cover">
-                    <div class="absolute top-0 left-0 text-black p-2">
-                        <div class=" bg-white rounded-lg">
-                            <span class="fi fi-{{ getCountryCode(movie.language) }} text-black rounded-lg text-sm ml-1 mr-1"></span>
-                        </div>
-                    </div>
-                    <div class="absolute top-0 right-0 text-black p-2">
-                        <span class="bg-yellow-500 text-black px-2 py-1 rounded-lg text-sm ml-2">{{ movie.duration }}</span>
-                        <span class="bg-red-500 text-white px-2 py-1 rounded-lg text-sm ml-2">{{ movie.rating }}</span>
-                    </div>
-                </div>
-                <div class="p-2">
-                    <h3 class=" text-2xl font-bold">{{ movie.title }}</h3>
+            <div class="flex items-center mb-8 relative">
+                <h2 class="text-4xl font-bold absolute left-1/2 transform -translate-x-1/2">Now Showing</h2>
+                <div class="ml-auto">
+                    <a routerLink="/movies" [queryParams]="{ tab: 'now-showing' }"
+                        class="bg-yellow-500 text-black px-5 py-2 rounded-lg text-lg hover:bg-yellow-600">See All</a>
                 </div>
             </div>
-          </div>
+            <div class="flex overflow-x-auto scrollbar-hide space-x-8 p-4">
+                <div *ngFor="let movie of nowshowingMovies"
+                    class="text-black rounded-lg overflow-hidden shadow-lg flex-shrink-0 w-72">
+                    <div class="w-full h-[28rem] bg-white relative">
+                        <img [src]="movie.image" alt="{{ movie.title }}" class="w-full h-full object-cover">
+                        <div class="absolute top-0 left-0 text-black p-2">
+                            <div class="bg-neutral-100 rounded-lg">
+                                <span
+                                    class="fi fi-{{ getCountryCode(movie.language) }} text-black rounded-lg text-sm ml-1 mr-1"></span>
+                            </div>
+                        </div>
+                        <div class="absolute top-0 right-0 text-black p-2">
+                            <span class="bg-yellow-500 text-black px-2 py-1 rounded-lg text-sm ml-2">{{ movie.duration
+                                }}</span>
+                            <span class="bg-red-500 text-white px-2 py-1 rounded-lg text-sm ml-2">{{ movie.rating
+                                }}</span>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-black">
+                        <h3 class="text-xl font-medium text-white">{{ movie.title }}</h3>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
-      
 
-    <!-- Contact Us Section -->
-    <section class="py-12 bg-gray-200">
+    <!-- Coming Soon Section -->
+    <section id="coming-soon" class="py-12 bg-gray-200 font-popins">
         <div class="container mx-auto text-center">
-            <h2 class="text-4xl font-bold mb-8">Contact Us</h2>
-            <p class="mb-4">Need help? Reach out to us and we'll be happy to assist you.</p>
-            <a href="mailto:info@moviebooking.com" class="bg-yellow-500 text-black px-6 py-3 rounded-lg text-lg hover:bg-yellow-600">Email Us</a>
+            <div class="flex items-center mb-8 relative">
+                <h2 class="text-4xl font-bold absolute left-1/2 transform -translate-x-1/2">Coming Soon</h2>
+                <div class="ml-auto">
+                    <a routerLink="/movies" [queryParams]="{ tab: 'coming-soon' }"
+                        class="bg-yellow-500 text-black px-5 py-2 rounded-lg text-lg hover:bg-yellow-600">See All</a>
+                </div>
+            </div>
+            <div class="flex overflow-x-auto scrollbar-hide space-x-6 p-4">
+                <div *ngFor="let movie of upcomingMovies"
+                    class="text-black rounded-lg overflow-hidden shadow-lg flex-shrink-0 w-48">
+                    <div class="w-full h-72 bg-white relative">
+                        <img [src]="movie.image" alt="{{ movie.title }}" class="w-full h-full object-cover">
+                        <div class="absolute top-0 right-0 text-black p-2">
+                            <span class="bg-red-500 text-white px-2 py-1 rounded-lg text-sm ml-2">{{ movie.release_date
+                                }}</span>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-black">
+                        <h3 class="text-lg font-medium text-white">{{ movie.title }}</h3>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white text-center py-6">
-        <p>&copy; 2024 Movie Booking System. All Rights Reserved.</p>
-    </footer>
 </body>

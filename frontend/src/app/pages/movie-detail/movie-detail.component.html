@@ -1,0 +1,99 @@
+<section class="container mx-auto py-12 px-4 mt-8">
+  <div *ngIf="movie" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Movie Image -->
+    <div class="flex justify-center lg:justify-center">
+      <img [src]="movie.image" alt="{{ movie.title }}" class="w-[24rem] h-[32rem] object-cover rounded-lg shadow-lg" />
+    </div>
+
+    <!-- Movie Details -->
+    <div class="flex flex-col">
+      <!-- Tab Navigation -->
+      <div class="flex mb-6 border-b border-gray-300">
+        <button class="px-4 py-2 font-semibold transition-colors border-b-2" [ngClass]="{
+            'border-yellow-500 text-yellow-500': activeTab === 'details',
+            'border-transparent text-gray-800': activeTab !== 'details'
+          }" (click)="activeTab = 'details'">
+          Details
+        </button>
+        <button class="px-4 py-2 font-semibold transition-colors border-b-2" [ngClass]="{
+            'border-yellow-500 text-yellow-500': activeTab === 'schedule',
+            'border-transparent text-gray-800': activeTab !== 'schedule'
+          }" (click)="activeTab = 'schedule'">
+          Schedule
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div *ngIf="activeTab === 'details'">
+        <h1 class="text-4xl font-bold mb-6 text-gray-800">{{ movie.title }}</h1>
+
+        <!-- Language and Rating -->
+        <div class="flex items-center gap-4 mb-6">
+          <div class="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold">
+            Duration: {{ movie.duration }}
+          </div>
+          <div class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">
+            Rating: {{ movie.rating }}
+          </div>
+        </div>
+
+        <!-- Description -->
+        <p class="text-lg text-gray-600 leading-relaxed mb-6">
+          {{ movie.description }}
+        </p>
+
+        <!-- Additional Details (e.g., Release Date, Genre, Language) -->
+        <div class="space-y-2">
+          <div class="flex items-center">
+            <span class="font-bold text-gray-800">Release Date:</span>
+            <span class="ml-2 text-gray-600">{{
+              movie.release_date | date : "longDate"
+              }}</span>
+          </div>
+          <div class="flex items-center">
+            <span class="font-bold text-gray-800">Genre:</span>
+            <span class="ml-2 text-gray-600">{{ movie.genre }}</span>
+          </div>
+          <div class="flex items-center">
+            <span class="font-bold text-gray-800">Language:</span>
+            <span class="ml-2 text-gray-600">{{
+              movie.language | uppercase
+              }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'schedule'">
+        <!-- Sub Tab Navigation for Dates -->
+        <div class="flex mb-4">
+          <button *ngFor="let dateTab of dateTabs"
+            class="w-16 h-16 flex flex-col justify-center items-center font-semibold transition-colors"
+            [ngClass]="{
+              'bg-yellow-500 text-black': selectedDate === dateTab.date && !dateTab.isHeader,
+              'bg-gray-200 text-gray-800': selectedDate !== dateTab.date && !dateTab.isHeader,
+              'cursor-default': dateTab.isHeader
+            }"
+            (click)="!dateTab.isHeader ? onDateTabClick(dateTab.date) : null"
+            [disabled]="dateTab.isHeader">
+            <span *ngIf="dateTab.isHeader" class="block text-center">{{ dateTab.month }}</span>
+            <span *ngIf="dateTab.isHeader" class="block text-center">{{ dateTab.year }}</span>
+            <span *ngIf="!dateTab.isHeader" class="block">{{ dateTab.day }}</span>
+            <span *ngIf="!dateTab.isHeader" class="block">{{ dateTab.date.split('-')[2] }}</span>
+          </button>
+        </div>
+      
+        <!-- Schedule Content -->
+        <div *ngIf="selectedDate">
+          <h2 class="text-2xl font-bold mb-4 text-gray-800">Showtimes for {{ selectedDate }}:</h2>
+          <ul *ngIf="showtimeData">
+            <li class="flex justify-between">
+              <span class="font-semibold">Time: {{ showtimeData.start_time }} - {{ showtimeData.end_time }}</span>
+              <span class="font-semibold">Available Seats: {{ availableSeatsCount }}</span>
+            </li>
+          </ul>
+          <div *ngIf="!showtimeData" class="text-gray-500">No showtimes available for this date.</div>
+        </div>        
+      </div>
+    </div>
+  </div>
+</section>

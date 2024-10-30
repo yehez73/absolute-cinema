@@ -16,9 +16,13 @@ func Route() *echo.Echo {
 	////// Movie
 	r.GET("/movies", controllers.GetMovies)
 	r.GET("/movie/:id", controllers.GetSpecMovie)
+	r.GET("/movie/nowshowing", controllers.GetNowShowing)
+	r.GET("/movie/upcoming", controllers.GetUpcoming)
 	////// Showtime
 	r.GET("/showtimes", controllers.GetShowtimes)
 	r.GET("/showtime/:id", controllers.GetSpecShowtime)
+	// Get specfic showtime by movie id and showdate
+	r.GET("/showtime/:movie_id/:showdate", controllers.GetSpecShowtimeByMovieDate)
 	////// Theater
 	r.GET("/theaters", controllers.GetTheaters)
 	r.GET("/theater/:id", controllers.GetSpecTheater)
