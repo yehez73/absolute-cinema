@@ -18,3 +18,14 @@ type Showtime struct {
 	CreatedAt      time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt      time.Time          `bson:"updated_at" json:"updated_at"`
 }
+
+type TheaterShowtime struct {
+	TheaterID      primitive.ObjectID `json:"theater_id"`
+	Name   		   string             `json:"theater_name"`
+	Location 	   string            `json:"theater_location"`
+	Showtimes 	   []Showtime         `json:"showtimes"`
+}
+
+type GroupedShowtime struct {
+	Theaters	   []TheaterShowtime `json:"theaters"`
+}

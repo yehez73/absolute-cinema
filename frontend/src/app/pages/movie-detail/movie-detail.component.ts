@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MoviesService } from '../../services/movies/movies.service';
 import { CommonModule } from '@angular/common';
-import { ShowtimeService } from '../../services/showtime/showtime.service';
+import { ShowtimeService, GroupedShowtime } from '../../services/showtime/showtime.service';
 import { catchError, of } from 'rxjs';
 
 @Component({
@@ -12,12 +12,15 @@ import { catchError, of } from 'rxjs';
   templateUrl: './movie-detail.component.html',
   styleUrls: ['./movie-detail.component.css'],
 })
+
 export class MovieDetailComponent implements OnInit {
-  activeTab: string = 'details';
-  selectedDate: string = ''; // Initialized to today's date
+  activeTab: string = 'schedule';
+  selectedDate: string = '';
+  isModalOpen: boolean = false;
+  selectedSeats: number = 1;
   movie: any;
-  showtimeData: any; // Holds showtime data for the selected date
-  availableSeatsCount: number = 0; // To hold available seats count
+  showtimeData: GroupedShowtime | null = null;
+  availableSeatsCount: number = 0;
   dateTabs: {
     date: string;
     day: string;
@@ -25,15 +28,45 @@ export class MovieDetailComponent implements OnInit {
     year: string;
     isHeader: boolean;
   }[] = [];
+  expandedTheaterId: string | null = null;
+  selectedShowtime: any;
 
   constructor(
-    private route: ActivatedRoute,
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
     private moviesService: MoviesService,
     private showtimeService: ShowtimeService
   ) {}
 
+  incrementSeats() {
+    if (this.selectedSeats < 8) {
+      this.selectedSeats++;
+    }
+  }
+
+  decrementSeats() {
+    if (this.selectedSeats > 1) {
+      this.selectedSeats--;
+    }
+  }
+
+  openModal(showtime: any) {
+    this.selectedShowtime = showtime;
+    this.isModalOpen = true;
+
+    // Count available seats only for the selected showtime
+    this.availableSeatsCount = showtime.available_seats
+      ? showtime.available_seats.filter((seat: { is_available: any; }) => seat.is_available).length
+      : 0;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+    this.selectedSeats = 1;
+  }
+
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
+    const id = this.activatedRoute.snapshot.paramMap.get('id');
     if (id) {
       this.moviesService.getMovieById(id).subscribe((data) => {
         this.movie = data;
@@ -82,36 +115,62 @@ export class MovieDetailComponent implements OnInit {
   }
 
   fetchShowtimeData() {
-    const movieId = this.route.snapshot.paramMap.get('id');
+    const movieId = this.activatedRoute.snapshot.paramMap.get('id');
     if (movieId && this.selectedDate) {
-      this.showtimeService.getShowtimeByMovieIdAndDate(movieId, this.selectedDate)
+      this.showtimeService.getGroupedShowtime(movieId, this.selectedDate)
         .pipe(
           catchError(error => {
             if (error.status === 204) {
               console.warn('No content available for the selected date.');
               this.showtimeData = null;
-              this.availableSeatsCount = 0;
             } else {
               console.error('Error fetching showtime:', error);
+              this.showtimeData = null;
             }
             return of(null);
           })
         )
         .subscribe(showtime => {
           if (showtime) {
-            // If there's showtime data, process it
             this.showtimeData = showtime;
-            this.availableSeatsCount = showtime.available_seats.filter(seat => seat.is_available).length;
           } else {
             this.showtimeData = null;
-            this.availableSeatsCount = 0;
           }
         });
     }
-  }  
+  }
+
+  toggleAccordion(theaterId: string) {
+    this.expandedTheaterId = this.expandedTheaterId === theaterId ? null : theaterId;
+  }
 
   onDateTabClick(date: string) {
     this.selectedDate = date;
     this.fetchShowtimeData();
+  }
+
+  // Method to check if a showtime is in the past based on local OS time
+  isShowtimeInThePast(showtimeTime: string): boolean {
+    const currentTime = new Date();
+    const [hours, minutes] = showtimeTime.split(':').map(Number);
+    const showtimeDate = new Date(currentTime);
+    showtimeDate.setHours(hours, minutes, 0, 0);
+    return showtimeDate < currentTime;
+  }
+
+  confirmSelection() {
+    this.isModalOpen = false;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.router.navigate(['/login']);
+    } else {
+      this.router.navigate(['/seat-reservation'], {
+        queryParams: {
+          movieId: this.movie.id,
+          showtimeId: this.selectedShowtime.id,
+          selectedSeats: this.selectedSeats,
+        },
+      });
+    }
   }
 }

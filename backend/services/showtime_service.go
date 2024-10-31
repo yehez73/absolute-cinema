@@ -3,6 +3,7 @@ package services
 import (
 	"backend/models"
 	"context"
+	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -47,14 +48,63 @@ func GetSpecShowtime(id string) (models.Showtime, error) {
 	return showtime, err
 }
 
-func GetSpecShowtimeByMovieDate(movieID string, showdate string) (models.Showtime, error) {
-	var showtime models.Showtime
+func GetSpecShowtimeByMovieDate(movieID string, showdate string) (models.GroupedShowtime, error) {
+	var showtimes []models.Showtime
+	var groupedResponse models.GroupedShowtime
+
 	objectID, err := primitive.ObjectIDFromHex(movieID)
 	if err != nil {
-		return showtime, err
+		return groupedResponse, err
 	}
-	err = ShowtimeCollection.FindOne(context.Background(), bson.M{"movie_id": objectID, "show_date": showdate}).Decode(&showtime)
-	return showtime, err
+
+	cursor, err := ShowtimeCollection.Find(context.Background(), bson.M{"movie_id": objectID, "show_date": showdate})
+	if err != nil {
+		return groupedResponse, err
+	}
+	defer cursor.Close(context.Background())
+
+	if err = cursor.All(context.Background(), &showtimes); err != nil {
+		return groupedResponse, err
+	}
+
+	sort.Slice(showtimes, func(i, j int) bool {
+		startTimeI, _ := time.Parse("15:04", showtimes[i].StartTime)
+		startTimeJ, _ := time.Parse("15:04", showtimes[j].StartTime)
+		return startTimeI.Before(startTimeJ)
+	})
+
+	theaterMap := make(map[string][]models.Showtime)
+	for _, showtime := range showtimes {
+		theaterID := showtime.TheaterID.Hex()
+		theaterMap[theaterID] = append(theaterMap[theaterID], showtime)
+	}
+
+	theaterCollection := ShowtimeCollection.Database().Collection("theater")
+	for theaterID, shows := range theaterMap {
+		theaterObjectID, err := primitive.ObjectIDFromHex(theaterID)
+		if err != nil {
+			return groupedResponse, err
+		}
+
+		var theater models.Theater
+		err = theaterCollection.FindOne(context.Background(), bson.M{"_id": theaterObjectID}).Decode(&theater)
+		if err != nil {
+			return groupedResponse, err
+		}
+
+		groupedResponse.Theaters = append(groupedResponse.Theaters, models.TheaterShowtime{
+			TheaterID: theaterObjectID,
+			Name:      theater.Name,
+			Location:  theater.Location,
+			Showtimes: shows,
+		})
+	}
+
+	sort.Slice(groupedResponse.Theaters, func(i, j int) bool {
+		return groupedResponse.Theaters[i].Name < groupedResponse.Theaters[j].Name
+	})
+
+	return groupedResponse, nil
 }
 
 func CreateShowtime(showtime *models.Showtime) error {

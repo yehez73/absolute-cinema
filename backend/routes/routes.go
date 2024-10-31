@@ -21,8 +21,9 @@ func Route() *echo.Echo {
 	////// Showtime
 	r.GET("/showtimes", controllers.GetShowtimes)
 	r.GET("/showtime/:id", controllers.GetSpecShowtime)
-	// Get specfic showtime by movie id and showdate
+	// Get specfic showtime group by theaters by movie and date
 	r.GET("/showtime/:movie_id/:showdate", controllers.GetSpecShowtimeByMovieDate)
+	
 	////// Theater
 	r.GET("/theaters", controllers.GetTheaters)
 	r.GET("/theater/:id", controllers.GetSpecTheater)

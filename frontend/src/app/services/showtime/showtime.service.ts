@@ -21,6 +21,17 @@ export interface Showtime {
   updated_at: string;
 }
 
+export interface TheaterShowtime {
+  theater_id: string;
+  theater_name: string;
+  theater_location: string;
+  showtimes: Showtime[];
+}
+
+export interface GroupedShowtime {
+  theaters: TheaterShowtime[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -29,7 +40,7 @@ export class ShowtimeService {
 
   constructor() { }
 
-  getShowtimeByMovieIdAndDate(id: string, date: string): Observable<Showtime> {
-    return from(axios.get<Showtime>(`${this.apiUrl}/showtime/${id}/${date}`).then(response => response.data));
+  getGroupedShowtime(id: string, date: string): Observable<GroupedShowtime> {
+    return from(axios.get<GroupedShowtime>(`${this.apiUrl}/showtime/${id}/${date}`).then(response => response.data));
   }  
 }

@@ -1,11 +1,9 @@
 <section class="container mx-auto py-12 px-4 mt-8">
   <div *ngIf="movie" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Movie Image -->
     <div class="flex justify-center lg:justify-center">
       <img [src]="movie.image" alt="{{ movie.title }}" class="w-[24rem] h-[32rem] object-cover rounded-lg shadow-lg" />
     </div>
 
-    <!-- Movie Details -->
     <div class="flex flex-col">
       <!-- Tab Navigation -->
       <div class="flex mb-6 border-b border-gray-300">
@@ -27,7 +25,6 @@
       <div *ngIf="activeTab === 'details'">
         <h1 class="text-4xl font-bold mb-6 text-gray-800">{{ movie.title }}</h1>
 
-        <!-- Language and Rating -->
         <div class="flex items-center gap-4 mb-6">
           <div class="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold">
             Duration: {{ movie.duration }}
@@ -37,12 +34,10 @@
           </div>
         </div>
 
-        <!-- Description -->
         <p class="text-lg text-gray-600 leading-relaxed mb-6">
           {{ movie.description }}
         </p>
 
-        <!-- Additional Details (e.g., Release Date, Genre, Language) -->
         <div class="space-y-2">
           <div class="flex items-center">
             <span class="font-bold text-gray-800">Release Date:</span>
@@ -65,35 +60,109 @@
 
       <div *ngIf="activeTab === 'schedule'">
         <!-- Sub Tab Navigation for Dates -->
-        <div class="flex mb-4">
-          <button *ngFor="let dateTab of dateTabs"
-            class="w-16 h-16 flex flex-col justify-center items-center font-semibold transition-colors"
-            [ngClass]="{
-              'bg-yellow-500 text-black': selectedDate === dateTab.date && !dateTab.isHeader,
-              'bg-gray-200 text-gray-800': selectedDate !== dateTab.date && !dateTab.isHeader,
-              'cursor-default': dateTab.isHeader
-            }"
-            (click)="!dateTab.isHeader ? onDateTabClick(dateTab.date) : null"
-            [disabled]="dateTab.isHeader">
-            <span *ngIf="dateTab.isHeader" class="block text-center">{{ dateTab.month }}</span>
-            <span *ngIf="dateTab.isHeader" class="block text-center">{{ dateTab.year }}</span>
-            <span *ngIf="!dateTab.isHeader" class="block">{{ dateTab.day }}</span>
-            <span *ngIf="!dateTab.isHeader" class="block">{{ dateTab.date.split('-')[2] }}</span>
-          </button>
-        </div>
-      
+        <div class="border-b border-gray-300 mb-6">
+          <div class="flex mb-6 gap-1">
+            <button *ngFor="let dateTab of dateTabs"
+              class="w-16 h-16 flex flex-col justify-center items-center font-semibold transition-colors"
+              [ngClass]="{
+                'bg-yellow-500 text-black': selectedDate === dateTab.date && !dateTab.isHeader,
+                'bg-gray-200 text-gray-800': selectedDate !== dateTab.date && !dateTab.isHeader,
+                'cursor-default': dateTab.isHeader
+              }"
+              (click)="!dateTab.isHeader ? onDateTabClick(dateTab.date) : null"
+              [disabled]="dateTab.isHeader">
+              <span *ngIf="dateTab.isHeader" class="block text-center">{{ dateTab.month }}</span>
+              <span *ngIf="dateTab.isHeader" class="block text-center">{{ dateTab.year }}</span>
+              <span *ngIf="!dateTab.isHeader" class="block text-center">{{ dateTab.day }}</span>
+              <span *ngIf="!dateTab.isHeader" class="block text-center">{{ dateTab.date.split('-')[2] }}</span>
+            </button>
+          </div>  
+        </div>      
         <!-- Schedule Content -->
         <div *ngIf="selectedDate">
-          <h2 class="text-2xl font-bold mb-4 text-gray-800">Showtimes for {{ selectedDate }}:</h2>
-          <ul *ngIf="showtimeData">
-            <li class="flex justify-between">
-              <span class="font-semibold">Time: {{ showtimeData.start_time }} - {{ showtimeData.end_time }}</span>
-              <span class="font-semibold">Available Seats: {{ availableSeatsCount }}</span>
-            </li>
-          </ul>
-          <div *ngIf="!showtimeData" class="text-gray-500">No showtimes available for this date.</div>
-        </div>        
-      </div>
+          <!-- <h2 class="text-2xl font-bold mb-4 text-gray-800">Showtimes for {{ selectedDate }}:</h2> -->
+      
+          <!-- Accordion for Showtimes Grouped by Theater -->
+          <div *ngIf="showtimeData" class="space-y-4">
+            <div *ngFor="let theater of showtimeData.theaters">
+              <div class="border rounded-lg shadow-sm">
+                <h3 
+                  (click)="toggleAccordion(theater.theater_id)" 
+                  class="bg-black text-white font-semibold p-4 cursor-pointer flex justify-between items-center transition-all duration-300">
+                  <span>{{ theater.theater_name }} - {{ theater.theater_location }}</span>
+                  <span [ngClass]="{'rotate-180': expandedTheaterId === theater.theater_id}" class="transform transition-transform duration-300">
+                    &#9660;
+                  </span>
+                </h3>
+                <div *ngIf="expandedTheaterId === theater.theater_id" class="bg-gray-100 p-4">
+                  <div class="flex flex-wrap justify-start gap-4">
+                    <div *ngFor="let showtime of theater.showtimes">
+                      <button 
+                        class="h-12 w-32 font-semibold rounded transition-colors"
+                        [ngClass]="{
+                          'bg-yellow-500 text-white hover:bg-yellow-600': !isShowtimeInThePast(showtime.start_time),
+                          'bg-gray-200 text-gray-800 cursor-not-allowed': isShowtimeInThePast(showtime.start_time)
+                        }"
+                        (click)="openModal(showtime)"
+                        [disabled]="isShowtimeInThePast(showtime.start_time)"
+                      >
+                        {{ showtime.start_time }}
+                      </button>
+                    </div>
+                  </div>
+                </div>                              
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!showtimeData || !showtimeData.theaters" class="text-gray-500">No showtimes available for this date.</div>
+        </div> 
+        <!-- Modal for Seat Selection -->
+        <div *ngIf="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 font-popins">
+          <div class="bg-white rounded-lg p-6 w-[32rem] shadow-lg transform transition-all duration-300 relative">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg text-gray-800">How many seats needed?</h2>
+              <button (click)="closeModal()" class="text-gray-600 hover:text-gray-800 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Movie Information -->
+            <div class="flex items-center mb-4">
+                <img src="https://i.redd.it/4uh2ovyx727d1.jpeg" alt="Absolute Cinema" class="w-24 h-16 object-cover rounded-lg mr-4" />
+              <!-- <img [src]="movie.image" alt="{{ movie.title }}" class="w-16 h-16 object-cover rounded-lg mr-4" /> -->
+              <div class="flex flex-col">
+                <span class="font-bold text-gray-800">{{ movie.title }}</span>
+                <span class="text-gray-600">{{ selectedDate | date: 'fullDate' }}</span>
+              </div>
+            </div>
+            <!-- Card for Seat Selection -->
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full mb-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-gray-600">{{ selectedShowtime?.start_time }}</p>
+                  <p class="text-gray-600">{{ availableSeatsCount }} seats available</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button (click)="decrementSeats()" class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-yellow-600 transition duration-200">
+                    <span class="text-lg">-</span>
+                  </button>
+                  <span class="text-xl">{{ selectedSeats }}</span>
+                  <button (click)="incrementSeats()" class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-yellow-600 transition duration-200">
+                    <span class="text-lg">+</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-center space-x-2">
+              <button (click)="confirmSelection()" class="bg-yellow-500 text-white px-4 py-2 transition-colors hover:bg-green-600 w-full rounded-full">
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>         
     </div>
   </div>
 </section>
